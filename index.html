@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIGAP — Sistema de Gestão de Indicadores de Saúde da Atenção Primária</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --c900:#590D22; --c800:#800F2F; --c700:#A4133C; --c600:#C9184A;
+  --c500:#FF4D6D; --c400:#FF758F; --c300:#FF8FA3; --c200:#FFB3C1;
+  --c100:#FFCCD5; --c050:#FFF0F3;
+  --paper:var(--c050); --card:#FFFFFF; --line:var(--c200);
+  --ink:var(--c900); --muted:#8A5A67;
+  --disp:'Archivo',system-ui,sans-serif;
+  --body:'Public Sans',system-ui,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+  --rail:236px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--c600);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---------- LOGIN ---------- */
+#login{position:fixed;inset:0;background:var(--c900);display:flex;align-items:center;justify-content:center;padding:24px;z-index:50}
+.lgcard{width:100%;max-width:400px}
+.lgmark{display:flex;align-items:center;gap:11px;margin-bottom:28px}
+.lgdot{width:34px;height:34px;border-radius:50%;background:var(--c500);position:relative;flex:none}
+.lgdot::after{content:"";position:absolute;inset:10px;border-radius:50%;background:var(--c900)}
+.lgname{font-family:var(--disp);font-weight:800;font-size:22px;letter-spacing:-.02em;color:#fff}
+.lgsub{font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--c300)}
+.lgbox{background:#fff;border-radius:4px;padding:26px}
+.lgtitle{font-family:var(--disp);font-weight:700;font-size:19px;letter-spacing:-.02em;margin:0 0 4px}
+.lgdesc{color:var(--muted);font-size:13px;margin:0 0 20px}
+label.fl{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--c700);margin-bottom:5px}
+.inp{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:3px;background:#fff;font-size:14px}
+.inp:hover{border-color:var(--c300)}
+.field{margin-bottom:15px}
+.btn{border:1px solid transparent;border-radius:3px;padding:9px 15px;font-weight:600;font-size:13.5px;cursor:pointer;background:var(--c600);color:#fff}
+.btn:hover{background:var(--c700)}
+.btn.ghost{background:#fff;color:var(--c700);border-color:var(--line)}
+.btn.ghost:hover{background:var(--c050);border-color:var(--c300)}
+.btn.wide{width:100%;padding:11px}
+.lgnote{margin-top:16px;font-size:11.5px;color:var(--c300);text-align:center;font-family:var(--mono)}
+
+/* ---------- SHELL ---------- */
+#app{display:none}
+#app.on{display:block}
+.rail{position:fixed;top:0;left:0;bottom:0;width:var(--rail);background:var(--c900);padding:20px 0;display:flex;flex-direction:column;z-index:20}
+.rmark{display:flex;align-items:center;gap:10px;padding:0 18px 20px}
+.rmark .lgdot{width:26px;height:26px}
+.rmark .lgdot::after{inset:7.5px}
+.rmark .lgname{font-size:16px}
+.rmark .lgsub{font-size:9px}
+.rsec{font-family:var(--mono);font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;color:#A4133C;padding:14px 18px 6px}
+.nav{display:flex;align-items:center;gap:9px;width:100%;background:none;border:0;border-left:3px solid transparent;padding:8px 18px;color:var(--c200);text-align:left;cursor:pointer;font-size:13.5px}
+.nav:hover{color:#fff;background:rgba(255,255,255,.05)}
+.nav.on{color:#fff;border-left-color:var(--c500);background:rgba(255,77,109,.12);font-weight:600}
+.nav .ico{width:16px;text-align:center;opacity:.85;flex:none}
+.badge{margin-left:auto;font-family:var(--mono);font-size:10.5px;background:var(--c600);color:#fff;border-radius:9px;padding:1px 6px}
+.rfoot{margin-top:auto;padding:14px 18px 0;border-top:1px solid rgba(255,255,255,.1);font-family:var(--mono);font-size:10px;color:#A4133C;line-height:1.6}
+
+.main{margin-left:var(--rail);min-height:100vh}
+.top{position:sticky;top:0;background:rgba(255,240,243,.94);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);padding:12px 28px;display:flex;align-items:center;gap:14px;z-index:10}
+.crumb{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--c700)}
+.who{margin-left:auto;display:flex;align-items:center;gap:9px}
+.who select{padding:5px 8px;border:1px solid var(--line);border-radius:3px;background:#fff;font-size:12.5px}
+.av{width:27px;height:27px;border-radius:50%;background:var(--c600);color:#fff;display:grid;place-items:center;font-weight:700;font-size:11.5px;font-family:var(--disp)}
+.wrap{padding:24px 28px 60px;max-width:1180px}
+
+h1.pg{font-family:var(--disp);font-weight:800;font-size:27px;letter-spacing:-.028em;margin:0 0 3px}
+p.pgsub{color:var(--muted);margin:0 0 22px;font-size:13.5px;max-width:70ch}
+h2.sec{font-family:var(--disp);font-weight:700;font-size:15px;letter-spacing:-.01em;margin:0 0 12px;display:flex;align-items:center;gap:9px}
+h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:18px}
+.grid{display:grid;gap:14px}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g2{grid-template-columns:1fr 1fr}
+.stack{display:flex;flex-direction:column;gap:22px}
+
+/* stat */
+.stat .lab{font-family:var(--mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--c700)}
+.stat .num{font-family:var(--disp);font-weight:800;font-size:38px;letter-spacing:-.04em;line-height:1.05;margin:6px 0 2px;font-variant-numeric:tabular-nums}
+.stat .fine{font-size:12px;color:var(--muted)}
+
+/* signature dot grid */
+.dotwrap{display:flex;flex-wrap:wrap;gap:5px;margin:14px 0 4px}
+.pdot{width:15px;height:15px;border-radius:50%;border:0;padding:0;cursor:pointer;transition:transform .12s}
+.pdot:hover{transform:scale(1.42)}
+.pdot.pendente{background:var(--c700)}
+.pdot.avencer{background:var(--c400)}
+.pdot.emdia{background:var(--c100)}
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:12px;color:var(--muted);margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.legend i{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px;vertical-align:middle}
+
+.meter{height:9px;background:var(--c100);border-radius:5px;overflow:hidden;margin:10px 0 7px;position:relative}
+.meter span{display:block;height:100%;background:var(--c600)}
+.meter em{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--c900)}
+
+/* table */
+table{width:100%;border-collapse:collapse}
+th{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--c700);text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid var(--c050);font-size:13.5px;vertical-align:middle}
+tbody tr:hover{background:var(--c050)}
+.mono{font-family:var(--mono);font-size:12.5px;font-variant-numeric:tabular-nums}
+.nm{font-weight:600}
+.tag{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:2px;white-space:nowrap}
+.tag.pendente{background:var(--c700);color:#fff}
+.tag.avencer{background:var(--c300);color:var(--c900)}
+.tag.emdia{background:var(--c100);color:var(--c800)}
+.tag.naoelegivel{background:#EFE6E9;color:#7A6169}
+.linkbtn{background:none;border:0;padding:0;color:var(--c600);font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:2px;font-size:13.5px}
+.filters{display:flex;flex-wrap:wrap;gap:9px;align-items:end;margin-bottom:14px}
+.filters .fg{display:flex;flex-direction:column;gap:4px}
+.filters select,.filters input{padding:7px 9px;border:1px solid var(--line);border-radius:3px;background:#fff;font-size:13px}
+.tools{margin-left:auto;display:flex;gap:8px}
+.empty{padding:40px 20px;text-align:center;color:var(--muted)}
+.empty b{display:block;font-family:var(--disp);font-size:15px;color:var(--ink);margin-bottom:4px}
+
+/* ficha */
+.fichahead{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;font-size:13px}
+.kv dt{font-family:var(--mono);font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--c700);padding-top:3px}
+.kv dd{margin:0}
+.tl{list-style:none;margin:0;padding:0 0 0 20px;border-left:2px solid var(--c100)}
+.tl li{position:relative;padding:0 0 18px 16px}
+.tl li::before{content:"";position:absolute;left:-27px;top:4px;width:11px;height:11px;border-radius:50%;background:var(--c300);border:2px solid #fff}
+.tl li.ex::before{background:var(--c700)}
+.tl .when{font-family:var(--mono);font-size:11px;color:var(--c700)}
+.tl .what{font-weight:600;margin:1px 0}
+.tl .note{color:var(--muted);font-size:13px}
+
+/* modal */
+.scrim{position:fixed;inset:0;background:rgba(89,13,34,.55);display:none;align-items:center;justify-content:center;padding:22px;z-index:40}
+.scrim.on{display:flex}
+.modal{background:#fff;border-radius:5px;width:100%;max-width:520px;max-height:90vh;overflow:auto}
+.mhead{padding:17px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.mhead h3{font-family:var(--disp);font-weight:700;font-size:16.5px;margin:0;letter-spacing:-.01em}
+.mbody{padding:20px}
+.mfoot{padding:14px 20px;border-top:1px solid var(--line);display:flex;gap:9px;justify-content:flex-end;background:var(--c050)}
+.x{margin-left:auto;background:none;border:0;font-size:20px;line-height:1;cursor:pointer;color:var(--muted)}
+textarea.inp{min-height:112px;font-family:var(--mono);font-size:12px;resize:vertical}
+
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--c900);color:#fff;padding:11px 18px;border-radius:4px;font-size:13.5px;opacity:0;transition:.25s;z-index:60;box-shadow:0 8px 24px rgba(89,13,34,.3)}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.note{background:var(--c050);border:1px solid var(--line);border-left:3px solid var(--c600);border-radius:3px;padding:11px 13px;font-size:13px;color:var(--c800)}
+.rulepreview{font-family:var(--mono);font-size:12.5px;background:var(--c900);color:var(--c100);padding:13px 15px;border-radius:3px;line-height:1.7}
+.rulepreview b{color:var(--c400);font-weight:600}
+.bar{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.bar .bl{width:118px;font-size:12.5px;flex:none}
+.bar .bt{flex:1;height:16px;background:var(--c100);border-radius:2px;overflow:hidden}
+.bar .bt span{display:block;height:100%;background:var(--c600)}
+.bar .bv{width:52px;text-align:right;font-family:var(--mono);font-size:12px}
+.switch{display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-size:13px}
+
+@media print{
+  .rail,.top,.tools,.filters,.noprint{display:none!important}
+  .main{margin:0}
+  .wrap{padding:0;max-width:none}
+  body{background:#fff}
+  .card{border:0;padding:0}
+}
+@media (max-width:860px){
+  :root{--rail:0px}
+  .rail{position:static;width:auto;flex-direction:row;flex-wrap:wrap;padding:12px;gap:4px}
+  .rsec,.rfoot{display:none}
+  .rmark{padding:0 10px 0 4px}
+  .nav{width:auto;border-left:0;border-bottom:3px solid transparent;padding:6px 10px}
+  .nav.on{border-left:0;border-bottom-color:var(--c500)}
+  .g3,.g2{grid-template-columns:1fr}
+  .wrap{padding:18px 14px 50px}
+  .tblscroll{overflow-x:auto}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<div id="login">
+  <div class="lgcard">
+    <div class="lgmark">
+      <div class="lgdot"></div>
+      <div>
+        <div class="lgname">SIGAP</div>
+        <div class="lgsub">USF Veranice Costa Tatino</div>
+      </div>
+    </div>
+    <div class="lgbox">
+      <h1 class="lgtitle">Entrar</h1>
+      <p class="lgdesc">Sistema de Gestão de Indicadores de Saúde da Atenção Primária.</p>
+      <div class="field">
+        <label class="fl" for="lguser">Usuário</label>
+        <select class="inp" id="lguser">
+          <option value="coord">Marina Alves — Coordenação</option>
+          <option value="equipe">Joana Ribeiro — Enfermagem</option>
+          <option value="acs">Cleide Moraes — Agente comunitária</option>
+          <option value="admin">Suporte TI — Administrador</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="fl" for="lgpwd">Senha</label>
+        <input class="inp" id="lgpwd" type="password" value="123456">
+      </div>
+      <button class="btn wide" onclick="entrar()">Entrar</button>
+    </div>
+    <p class="lgnote">Protótipo — dados fictícios</p>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app">
+  <nav class="rail">
+    <div class="rmark">
+      <div class="lgdot"></div>
+      <div>
+        <div class="lgname">SIGAP</div>
+        <div class="lgsub">USF V. C. Tatino</div>
+      </div>
+    </div>
+    <div class="rsec">Acompanhamento</div>
+    <button class="nav" data-go="painel"><span class="ico">◉</span>Painel</button>
+    <button class="nav" data-go="pendencias"><span class="ico">☰</span>Pendências <span class="badge" id="navBadge">0</span></button>
+    <button class="nav" data-go="pacientes"><span class="ico">☺</span>Pacientes</button>
+    <button class="nav" data-go="metas"><span class="ico">▤</span>Metas e relatórios</button>
+    <div class="rsec" data-admin>Administração</div>
+    <button class="nav" data-go="indicador" data-admin><span class="ico">⚙</span>Regra do indicador</button>
+    <button class="nav" data-go="usuarios" data-admin><span class="ico">◍</span>Usuários e auditoria</button>
+    <div class="rfoot">Indicador ativo<br><b style="color:#FFB3C1">Câncer de mama</b><br>Competência 2026/Q3</div>
+  </nav>
+
+  <div class="main">
+    <header class="top">
+      <span class="crumb" id="crumb">Painel</span>
+      <div class="who">
+        <select id="perfilSel" onchange="trocarPerfil()" title="Trocar perfil de acesso">
+          <option value="coord">Coordenação</option>
+          <option value="equipe">Equipe de saúde</option>
+          <option value="acs">Agente comunitária</option>
+          <option value="admin">Administrador</option>
+        </select>
+        <div class="av" id="avatar">MA</div>
+        <button class="btn ghost" onclick="sair()">Sair</button>
+      </div>
+    </header>
+    <div class="wrap" id="view"></div>
+  </div>
+</div>
+
+<div class="scrim" id="scrim" onclick="if(event.target===this)fecharModal()"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   REGRA DO INDICADOR  —  parametrizável (funcionalidade 3)
+   ========================================================= */
+const HOJE = new Date(2026,7,28); // 28/08/2026
+
+let regra = {
+  nome:'Prevenção do câncer de mama',
+  sexo:'F',
+  idadeMin:50,
+  idadeMax:74,
+  janelaMeses:24,
+  alertaDias:90,
+  meta:60
+};
+
+/* =========================================================
+   DADOS FICTÍCIOS
+   ========================================================= */
+let seq = 100;
+function p(nome,nasc,micro,acs,tel,ultima,contatos){
+  return {id:++seq,nome,cns:'7'+String(Math.floor(Math.random()*1e14)).padStart(14,'0'),
+          nasc,sexo:'F',micro,acs,tel,ultima,contatos:contatos||[]};
+}
+let pacientes = [
+  p('Ana Lúcia Ferreira','1958-03-12','Microárea 1','Cleide Moraes','(15) 99812-4471','2021-11-08',
+    [{data:'2026-07-14',canal:'Telefone',desfecho:'Não atendeu',nota:'Ligado às 14h, sem retorno.'}]),
+  p('Maria de Fátima Souza','1962-07-25','Microárea 1','Cleide Moraes','(15) 99745-2210','2024-02-19',[]),
+  p('Terezinha Barbosa','1953-01-30','Microárea 2','Rita Nunes','(15) 99633-8890',null,
+    [{data:'2026-06-02',canal:'Visita domiciliar',desfecho:'Recusou',nota:'Relata medo do exame. Enfermagem vai conversar.'}]),
+  p('Sônia Regina Prado','1967-11-04','Microárea 1','Cleide Moraes','(15) 99120-7745','2024-09-30',[]),
+  p('Jandira Camargo','1949-05-17','Microárea 3','Rita Nunes','(15) 99887-3312','2022-04-22',[]),
+  p('Neusa Aparecida Lima','1971-09-09','Microárea 2','Rita Nunes','(15) 99456-1180','2025-05-14',[]),
+  p('Cleuza Martins','1956-12-01','Microárea 3','Vera Pinto','(15) 99321-6654','2023-08-11',
+    [{data:'2026-08-20',canal:'WhatsApp',desfecho:'Agendou',nota:'Mamografia marcada para 09/09 no Hospital Regional.'}]),
+  p('Rosangela do Carmo','1964-02-28','Microárea 2','Rita Nunes','(15) 99774-9902','2024-06-05',[]),
+  p('Irene Salgado','1951-08-14','Microárea 1','Cleide Moraes','(15) 99009-4432',null,[]),
+  p('Marlene Teixeira','1959-04-03','Microárea 3','Vera Pinto','(15) 99555-2287','2022-10-19',[]),
+  p('Vanda Lúcia Reis','1974-06-21','Microárea 1','Cleide Moraes','(15) 99664-3341','2025-11-02',[]),
+  p('Antônia Bezerra','1947-10-08','Microárea 2','Rita Nunes','(15) 99230-7719','2023-03-27',[]),
+  p('Elza Nogueira','1969-01-16','Microárea 3','Vera Pinto','(15) 99881-5540','2024-12-12',[]),
+  p('Benedita Ramos','1955-07-07','Microárea 2','Rita Nunes','(15) 99112-8863','2021-06-30',
+    [{data:'2026-05-11',canal:'Telefone',desfecho:'Mudou de endereço',nota:'Família informou mudança para Sorocaba.'}]),
+  p('Lourdes Fagundes','1961-03-19','Microárea 1','Cleide Moraes','(15) 99447-2298','2024-08-08',[]),
+  p('Dirce Almeida','1950-11-23','Microárea 3','Vera Pinto','(15) 99738-1104','2023-01-15',[]),
+  p('Iracema Vieira','1972-05-05','Microárea 2','Rita Nunes','(15) 99290-6672','2025-09-21',[]),
+  p('Zilda Pereira','1948-09-27','Microárea 1','Cleide Moraes','(15) 99815-3390',null,[]),
+  p('Aparecida Fontes','1966-12-11','Microárea 3','Vera Pinto','(15) 99604-7728','2024-04-17',[]),
+  p('Eunice Cardoso','1957-06-02','Microárea 2','Rita Nunes','(15) 99172-5583','2022-12-09',[]),
+  p('Célia Regina Matos','1963-08-30','Microárea 1','Cleide Moraes','(15) 99926-4417','2025-02-26',[]),
+  p('Nair Bittencourt','1952-02-14','Microárea 3','Vera Pinto','(15) 99083-9925','2023-06-06',[]),
+  p('Joana Darc Ribeiro','1980-04-09','Microárea 1','Cleide Moraes','(15) 99511-2264','2025-01-20',[]),
+  p('Fernanda Coelho','1984-10-02','Microárea 2','Rita Nunes','(15) 99367-8841',null,[]),
+  p('Silvana Duarte','1978-07-18','Microárea 3','Vera Pinto','(15) 99248-3376','2024-10-25',[]),
+  p('Regina Célia Alves','1946-01-05','Microárea 1','Cleide Moraes','(15) 99790-1152','2025-07-30',[])
+];
+
+let auditoria = [];
+let usuarios = [
+  {nome:'Marina Alves',perfil:'Coordenação',email:'marina@usf.itapetininga.sp',ativo:true},
+  {nome:'Joana Ribeiro',perfil:'Equipe de saúde',email:'joana@usf.itapetininga.sp',ativo:true},
+  {nome:'Cleide Moraes',perfil:'Agente comunitária',email:'cleide@usf.itapetininga.sp',ativo:true},
+  {nome:'Rita Nunes',perfil:'Agente comunitária',email:'rita@usf.itapetininga.sp',ativo:true},
+  {nome:'Vera Pinto',perfil:'Agente comunitária',email:'vera@usf.itapetininga.sp',ativo:false},
+  {nome:'Suporte TI',perfil:'Administrador',email:'ti@potencial.local',ativo:true}
+];
+
+const USERS = {
+  coord:{nome:'Marina Alves',perfil:'coord',rot:'Coordenação',ini:'MA'},
+  equipe:{nome:'Joana Ribeiro',perfil:'equipe',rot:'Equipe de saúde',ini:'JR'},
+  acs:{nome:'Cleide Moraes',perfil:'acs',rot:'Agente comunitária',ini:'CM'},
+  admin:{nome:'Suporte TI',perfil:'admin',rot:'Administrador',ini:'TI'}
+};
+let atual = USERS.coord;
+let tela = 'painel';
+let fichaId = null;
+let filtro = {status:'acionavel',micro:'',acs:'',busca:''};
+
+/* =========================================================
+   MOTOR DE CÁLCULO
+   ========================================================= */
+const meses=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+function d(s){ if(!s) return null; const [a,m,x]=s.split('-').map(Number); return new Date(a,m-1,x); }
+function fmt(s){ const t=d(s); return t? String(t.getDate()).padStart(2,'0')+'/'+String(t.getMonth()+1).padStart(2,'0')+'/'+t.getFullYear() : '—'; }
+function idade(nasc){ const n=d(nasc); let i=HOJE.getFullYear()-n.getFullYear();
+  const m=HOJE.getMonth()-n.getMonth(); if(m<0||(m===0&&HOJE.getDate()<n.getDate())) i--; return i; }
+function addMeses(dt,n){ const r=new Date(dt); r.setMonth(r.getMonth()+n); return r; }
+function dias(a,b){ return Math.round((a-b)/86400000); }
+
+function avaliar(pac){
+  const id = idade(pac.nasc);
+  if(pac.sexo!==regra.sexo || id<regra.idadeMin || id>regra.idadeMax)
+    return {status:'naoelegivel', vence:null, atraso:0, idade:id};
+  if(!pac.ultima) return {status:'pendente', vence:null, atraso:9999, idade:id, semRegistro:true};
+  const vence = addMeses(d(pac.ultima), regra.janelaMeses);
+  const dd = dias(HOJE, vence);
+  if(dd>0) return {status:'pendente', vence, atraso:dd, idade:id};
+  if(dd > -regra.alertaDias) return {status:'avencer', vence, atraso:dd, idade:id};
+  return {status:'emdia', vence, atraso:dd, idade:id};
+}
+function todos(){ return pacientes.map(x=>({...x, ...avaliar(x)})); }
+function elegiveis(){ return todos().filter(x=>x.status!=='naoelegivel'); }
+function contagem(){
+  const e = elegiveis();
+  const c = {pendente:0,avencer:0,emdia:0,total:e.length};
+  e.forEach(x=>c[x.status]++);
+  c.naoelegivel = pacientes.length - e.length;
+  c.cobertura = c.total? Math.round((c.emdia+c.avencer)/c.total*100):0;
+  c.alvo = Math.ceil(c.total*regra.meta/100);
+  c.faltam = Math.max(0, c.alvo-(c.emdia+c.avencer));
+  return c;
+}
+const ROT = {pendente:'Pendente',avencer:'A vencer',emdia:'Em dia',naoelegivel:'Não elegível'};
+
+function log(acao,detalhe){
+  auditoria.unshift({quando:'28/08/2026 '+String(9+auditoria.length%9).padStart(2,'0')+':'+String(10+auditoria.length*7%50).padStart(2,'0'),
+                     quem:atual.nome, acao, detalhe});
+}
+
+/* =========================================================
+   NAVEGAÇÃO
+   ========================================================= */
+function entrar(){
+  const k = document.getElementById('lguser').value;
+  atual = USERS[k];
+  document.getElementById('perfilSel').value = k;
+  document.getElementById('login').style.display='none';
+  document.getElementById('app').classList.add('on');
+  log('Login','Acesso ao sistema');
+  ir('painel');
+}
+function sair(){
+  document.getElementById('app').classList.remove('on');
+  document.getElementById('login').style.display='flex';
+}
+function trocarPerfil(){
+  atual = USERS[document.getElementById('perfilSel').value];
+  log('Troca de perfil','Perfil ativo: '+atual.rot);
+  ir(tela==='indicador'||tela==='usuarios' ? 'painel' : tela);
+}
+function ir(t,id){
+  tela=t; if(id) fichaId=id;
+  document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('on', b.dataset.go===t));
+  const adm = atual.perfil==='admin' || atual.perfil==='coord';
+  document.querySelectorAll('[data-admin]').forEach(e=>e.style.display = adm?'':'none');
+  document.getElementById('avatar').textContent = atual.ini;
+  document.getElementById('navBadge').textContent = contagem().pendente;
+  const nomes={painel:'Painel',pendencias:'Pendências',pacientes:'Pacientes',metas:'Metas e relatórios',
+               indicador:'Regra do indicador',usuarios:'Usuários e auditoria',ficha:'Ficha da paciente'};
+  document.getElementById('crumb').textContent = nomes[t];
+  document.getElementById('view').innerHTML = ({painel:vPainel,pendencias:vPendencias,pacientes:vPacientes,
+    metas:vMetas,indicador:vIndicador,usuarios:vUsuarios,ficha:vFicha})[t]();
+  window.scrollTo(0,0);
+}
+document.addEventListener('click',e=>{ const b=e.target.closest('.nav'); if(b) ir(b.dataset.go); });
+
+function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('on');
+  clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('on'),2600); }
+function abrirModal(html){ document.getElementById('modal').innerHTML=html; document.getElementById('scrim').classList.add('on'); }
+function fecharModal(){ document.getElementById('scrim').classList.remove('on'); }
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') fecharModal(); });
+
+/* =========================================================
+   PAINEL  (funcionalidade 4 + 7 + assinatura)
+   ========================================================= */
+function vPainel(){
+  const c = contagem();
+  const lista = elegiveis().sort((a,b)=>b.atraso-a.atraso);
+  const dots = lista.map(x=>`<button class="pdot ${x.status}" title="${x.nome} — ${ROT[x.status]}" onclick="ir('ficha',${x.id})"></button>`).join('');
+  const urgentes = lista.filter(x=>x.status==='pendente').slice(0,5);
+  return `
+  <h1 class="pg">Bom dia, ${atual.nome.split(' ')[0]}.</h1>
+  <p class="pgsub">Cada ponto abaixo é uma mulher da área de abrangência. Passe o mouse para ver o nome, clique para abrir a ficha.</p>
+
+  <div class="stack">
+    <div class="grid g3">
+      <div class="card stat">
+        <div class="lab">Pendentes hoje</div>
+        <div class="num" style="color:var(--c700)">${c.pendente}</div>
+        <div class="fine">mulheres sem mamografia dentro da janela</div>
+      </div>
+      <div class="card stat">
+        <div class="lab">Vencem em ${regra.alertaDias} dias</div>
+        <div class="num" style="color:var(--c400)">${c.avencer}</div>
+        <div class="fine">dá tempo de agendar antes de virar pendência</div>
+      </div>
+      <div class="card stat">
+        <div class="lab">Faltam para a meta</div>
+        <div class="num">${c.faltam}</div>
+        <div class="fine">meta de ${regra.meta}% = ${c.alvo} de ${c.total} elegíveis</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="sec">População elegível &middot; ${c.total} mulheres</h2>
+      <div class="dotwrap">${dots}</div>
+      <div class="legend">
+        <span><i style="background:var(--c700)"></i>Pendente (${c.pendente})</span>
+        <span><i style="background:var(--c400)"></i>A vencer (${c.avencer})</span>
+        <span><i style="background:var(--c100)"></i>Em dia (${c.emdia})</span>
+        <span style="margin-left:auto">${c.naoelegivel} cadastradas fora da regra atual</span>
+      </div>
+      <div class="meter" style="margin-top:16px">
+        <span style="width:${c.cobertura}%"></span><em style="left:${regra.meta}%"></em>
+      </div>
+      <div class="fine" style="font-size:12px;color:var(--muted)">Cobertura atual <b>${c.cobertura}%</b> &middot; marca escura = meta de ${regra.meta}%</div>
+    </div>
+
+    <div class="card">
+      <h2 class="sec">Contatar primeiro</h2>
+      <div class="tblscroll"><table>
+        <thead><tr><th>Paciente</th><th>Idade</th><th>Última mamografia</th><th>Atraso</th><th>Microárea</th><th></th></tr></thead>
+        <tbody>${urgentes.map(x=>`<tr>
+          <td class="nm">${x.nome}</td>
+          <td class="mono">${x.idade}</td>
+          <td class="mono">${x.ultima?fmt(x.ultima):'sem registro'}</td>
+          <td class="mono" style="color:var(--c700);font-weight:600">${x.semRegistro?'—':x.atraso+' dias'}</td>
+          <td>${x.micro}</td>
+          <td><button class="linkbtn" onclick="modalContato(${x.id})">Registrar contato</button></td>
+        </tr>`).join('')}</tbody>
+      </table></div>
+      <button class="btn ghost" style="margin-top:14px" onclick="ir('pendencias')">Ver lista completa</button>
+    </div>
+  </div>`;
+}
+
+/* =========================================================
+   PENDÊNCIAS  (funcionalidade 4 + 8)
+   ========================================================= */
+function setFiltro(k,v){ filtro[k]=v; document.getElementById('view').innerHTML=vPendencias(); }
+function vPendencias(){
+  let lista = todos();
+  if(filtro.status==='acionavel') lista=lista.filter(x=>x.status==='pendente'||x.status==='avencer');
+  else if(filtro.status) lista=lista.filter(x=>x.status===filtro.status);
+  if(filtro.micro) lista=lista.filter(x=>x.micro===filtro.micro);
+  if(filtro.acs) lista=lista.filter(x=>x.acs===filtro.acs);
+  if(filtro.busca) lista=lista.filter(x=>x.nome.toLowerCase().includes(filtro.busca.toLowerCase()));
+  lista.sort((a,b)=>b.atraso-a.atraso);
+  const micros=[...new Set(pacientes.map(x=>x.micro))].sort();
+  const acss=[...new Set(pacientes.map(x=>x.acs))].sort();
+  const opt=(arr,sel)=>arr.map(v=>`<option ${v===sel?'selected':''}>${v}</option>`).join('');
+
+  return `
+  <h1 class="pg">Pendências</h1>
+  <p class="pgsub">Lista individual e acionável, ordenada da paciente com maior atraso para a menor. É esta tela que o e-Gestor não entrega.</p>
+
+  <div class="card">
+    <div class="filters noprint">
+      <div class="fg"><label class="fl">Situação</label>
+        <select onchange="setFiltro('status',this.value)">
+          <option value="acionavel" ${filtro.status==='acionavel'?'selected':''}>Pendente + a vencer</option>
+          <option value="pendente" ${filtro.status==='pendente'?'selected':''}>Só pendentes</option>
+          <option value="avencer" ${filtro.status==='avencer'?'selected':''}>Só a vencer</option>
+          <option value="emdia" ${filtro.status==='emdia'?'selected':''}>Em dia</option>
+          <option value="" ${filtro.status===''?'selected':''}>Todas</option>
+        </select></div>
+      <div class="fg"><label class="fl">Microárea</label>
+        <select onchange="setFiltro('micro',this.value)"><option value="">Todas</option>${opt(micros,filtro.micro)}</select></div>
+      <div class="fg"><label class="fl">Agente</label>
+        <select onchange="setFiltro('acs',this.value)"><option value="">Todos</option>${opt(acss,filtro.acs)}</select></div>
+      <div class="fg"><label class="fl">Buscar nome</label>
+        <input value="${filtro.busca}" oninput="filtro.busca=this.value" onchange="setFiltro('busca',this.value)" placeholder="ex.: Maria"></div>
+      <div class="tools">
+        <button class="btn ghost" onclick="window.print()">Imprimir</button>
+        <button class="btn ghost" onclick="modalCSV()">Exportar CSV</button>
+      </div>
+    </div>
+
+    <p class="mono" style="font-size:11.5px;color:var(--c700);margin:0 0 8px">
+      ${lista.length} paciente(s) &middot; regra: ${regra.sexo==='F'?'mulheres':'homens'} de ${regra.idadeMin} a ${regra.idadeMax} anos, mamografia a cada ${regra.janelaMeses} meses
+    </p>
+
+    ${lista.length? `<div class="tblscroll"><table>
+      <thead><tr><th>Paciente</th><th>Idade</th><th>Última</th><th>Vence em</th><th>Situação</th><th>Microárea / agente</th><th>Último contato</th><th class="noprint"></th></tr></thead>
+      <tbody>${lista.map(x=>{
+        const ult = x.contatos.length? x.contatos[x.contatos.length-1] : null;
+        return `<tr>
+          <td class="nm"><button class="linkbtn" onclick="ir('ficha',${x.id})">${x.nome}</button><br><span class="mono" style="color:var(--muted);font-size:11px">${x.tel}</span></td>
+          <td class="mono">${x.idade}</td>
+          <td class="mono">${x.ultima?fmt(x.ultima):'—'}</td>
+          <td class="mono">${x.vence? (x.atraso>0? '<span style="color:var(--c700);font-weight:600">há '+x.atraso+' d</span>' : 'em '+Math.abs(x.atraso)+' d') : 'sem registro'}</td>
+          <td><span class="tag ${x.status}">${ROT[x.status]}</span></td>
+          <td>${x.micro}<br><span style="color:var(--muted);font-size:12px">${x.acs}</span></td>
+          <td>${ult? `<span class="mono" style="font-size:11.5px">${fmt(ult.data)}</span><br><span style="color:var(--muted);font-size:12px">${ult.desfecho}</span>` : '<span style="color:var(--muted)">nenhum</span>'}</td>
+          <td class="noprint"><button class="btn ghost" onclick="modalContato(${x.id})">Contato</button></td>
+        </tr>`}).join('')}</tbody></table></div>`
+    : `<div class="empty"><b>Nenhuma paciente neste filtro.</b>Amplie a situação ou limpe a microárea para ver mais.</div>`}
+  </div>`;
+}
+
+function modalCSV(){
+  const linhas = ['nome;idade;telefone;microarea;agente;ultima_mamografia;situacao'];
+  todos().filter(x=>x.status==='pendente'||x.status==='avencer').forEach(x=>
+    linhas.push([x.nome,x.idade,x.tel,x.micro,x.acs,x.ultima?fmt(x.ultima):'',ROT[x.status]].join(';')));
+  log('Exportação','Lista de pendências exportada em CSV');
+  abrirModal(`<div class="mhead"><h3>Exportar CSV</h3><button class="x" onclick="fecharModal()">×</button></div>
+    <div class="mbody">
+      <p style="margin:0 0 10px;color:var(--muted)">Copie o conteúdo e salve como <span class="mono">pendencias.csv</span>.</p>
+      <textarea class="inp" readonly onclick="this.select()">${linhas.join('\n')}</textarea>
+    </div>
+    <div class="mfoot"><button class="btn" onclick="fecharModal()">Fechar</button></div>`);
+}
+
+/* =========================================================
+   FICHA + HISTÓRICO  (funcionalidade 6)
+   ========================================================= */
+function vFicha(){
+  const base = pacientes.find(x=>x.id===fichaId);
+  if(!base) return '<div class="empty"><b>Paciente não encontrada.</b></div>';
+  const x = {...base, ...avaliar(base)};
+  const eventos = [];
+  if(x.ultima) eventos.push({data:x.ultima,tipo:'ex',titulo:'Mamografia realizada',nota:'Resultado registrado no prontuário.'});
+  x.contatos.forEach(c=>eventos.push({data:c.data,tipo:'ct',titulo:c.canal+' — '+c.desfecho,nota:c.nota}));
+  eventos.sort((a,b)=>d(b.data)-d(a.data));
+
+  return `
+  <button class="linkbtn noprint" onclick="ir('pendencias')">← Voltar para pendências</button>
+  <h1 class="pg" style="margin-top:10px">${x.nome}</h1>
+  <p class="pgsub">${x.idade} anos &middot; ${x.micro} &middot; agente ${x.acs}</p>
+
+  <div class="grid g2">
+    <div class="card">
+      <h2 class="sec">Situação no indicador</h2>
+      <p style="margin:0 0 12px"><span class="tag ${x.status}">${ROT[x.status]}</span></p>
+      <dl class="kv">
+        <dt>Última mamografia</dt><dd class="mono">${x.ultima?fmt(x.ultima):'sem registro'}</dd>
+        <dt>Vencimento</dt><dd class="mono">${x.vence? fmt(x.vence.getFullYear()+'-'+String(x.vence.getMonth()+1).padStart(2,'0')+'-'+String(x.vence.getDate()).padStart(2,'0')) : '—'}</dd>
+        <dt>Situação</dt><dd>${x.atraso>0&&x.vence?('atrasada há '+x.atraso+' dias'):x.vence?('vence em '+Math.abs(x.atraso)+' dias'):'nunca registrada'}</dd>
+        <dt>Telefone</dt><dd class="mono">${x.tel}</dd>
+        <dt>CNS</dt><dd class="mono">${x.cns}</dd>
+        <dt>Nascimento</dt><dd class="mono">${fmt(x.nasc)}</dd>
+      </dl>
+      <div style="display:flex;gap:8px;margin-top:16px" class="noprint">
+        <button class="btn" onclick="modalContato(${x.id})">Registrar contato</button>
+        <button class="btn ghost" onclick="modalExame(${x.id})">Registrar mamografia</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="sec">Histórico</h2>
+      ${eventos.length? `<ul class="tl">${eventos.map(e=>`<li class="${e.tipo}">
+        <div class="when">${fmt(e.data)}</div>
+        <div class="what">${e.titulo}</div>
+        <div class="note">${e.nota||''}</div></li>`).join('')}</ul>`
+      : `<div class="empty"><b>Sem histórico ainda.</b>Registre o primeiro contato para começar a linha do tempo.</div>`}
+    </div>
+  </div>`;
+}
+
+/* =========================================================
+   REGISTRO DE CONTATO  (funcionalidade 5)
+   ========================================================= */
+function modalContato(id){
+  const x = pacientes.find(p=>p.id===id);
+  abrirModal(`<div class="mhead"><h3>Registrar contato</h3><button class="x" onclick="fecharModal()">×</button></div>
+  <div class="mbody">
+    <p style="margin:0 0 16px;color:var(--muted)"><b style="color:var(--ink)">${x.nome}</b> &middot; ${x.tel}</p>
+    <div class="field"><label class="fl">Canal</label>
+      <select class="inp" id="ctCanal"><option>Telefone</option><option>WhatsApp</option><option>Visita domiciliar</option><option>Presencial na unidade</option></select></div>
+    <div class="field"><label class="fl">Desfecho</label>
+      <select class="inp" id="ctDesf"><option>Agendou</option><option>Não atendeu</option><option>Recusou</option><option>Pediu para ligar depois</option><option>Mudou de endereço</option></select></div>
+    <div class="field"><label class="fl">Próxima tentativa</label>
+      <input class="inp" id="ctProx" type="date" value="2026-09-04"></div>
+    <div class="field" style="margin-bottom:0"><label class="fl">Observação</label>
+      <textarea class="inp" id="ctNota" style="min-height:70px;font-family:var(--body);font-size:13.5px" placeholder="O que foi combinado com a paciente"></textarea></div>
+  </div>
+  <div class="mfoot"><button class="btn ghost" onclick="fecharModal()">Cancelar</button>
+    <button class="btn" onclick="salvarContato(${id})">Salvar contato</button></div>`);
+}
+function salvarContato(id){
+  const x = pacientes.find(p=>p.id===id);
+  const desf = document.getElementById('ctDesf').value;
+  x.contatos.push({data:'2026-08-28',canal:document.getElementById('ctCanal').value,desfecho:desf,
+                   nota:document.getElementById('ctNota').value||'Sem observação.'});
+  log('Registro de contato',x.nome+' — '+desf);
+  fecharModal(); toast('Contato registrado para '+x.nome.split(' ')[0]+'.'); ir(tela);
+}
+function modalExame(id){
+  const x = pacientes.find(p=>p.id===id);
+  abrirModal(`<div class="mhead"><h3>Registrar mamografia</h3><button class="x" onclick="fecharModal()">×</button></div>
+  <div class="mbody">
+    <p style="margin:0 0 16px;color:var(--muted)"><b style="color:var(--ink)">${x.nome}</b></p>
+    <div class="field"><label class="fl">Data do exame</label><input class="inp" type="date" id="exData" value="2026-08-28"></div>
+    <div class="field" style="margin-bottom:0"><label class="fl">Situação do resultado</label>
+      <select class="inp"><option>Resultado recebido</option><option>Aguardando resultado</option></select></div>
+  </div>
+  <div class="mfoot"><button class="btn ghost" onclick="fecharModal()">Cancelar</button>
+    <button class="btn" onclick="salvarExame(${id})">Salvar</button></div>`);
+}
+function salvarExame(id){
+  const x = pacientes.find(p=>p.id===id);
+  x.ultima = document.getElementById('exData').value;
+  log('Registro de exame',x.nome+' — mamografia em '+fmt(x.ultima));
+  fecharModal(); toast(x.nome.split(' ')[0]+' saiu da lista de pendências.'); ir(tela);
+}
+
+/* =========================================================
+   PACIENTES  (funcionalidades 1 e 2)
+   ========================================================= */
+function vPacientes(){
+  const lista = todos().sort((a,b)=>a.nome.localeCompare(b.nome));
+  return `
+  <h1 class="pg">Pacientes</h1>
+  <p class="pgsub">Cadastro da população vinculada à unidade. A importação por planilha existe para migrar o controle que a equipe já mantém hoje.</p>
+  <div class="card">
+    <div class="filters">
+      <div class="tools" style="margin-left:0">
+        <button class="btn" onclick="modalPaciente()">Cadastrar paciente</button>
+        <button class="btn ghost" onclick="modalImport()">Importar planilha</button>
+      </div>
+    </div>
+    <div class="tblscroll"><table>
+      <thead><tr><th>Nome</th><th>Nascimento</th><th>Idade</th><th>Telefone</th><th>Microárea</th><th>Agente</th><th>Situação</th></tr></thead>
+      <tbody>${lista.map(x=>`<tr>
+        <td class="nm"><button class="linkbtn" onclick="ir('ficha',${x.id})">${x.nome}</button></td>
+        <td class="mono">${fmt(x.nasc)}</td><td class="mono">${x.idade}</td>
+        <td class="mono">${x.tel}</td><td>${x.micro}</td><td>${x.acs}</td>
+        <td><span class="tag ${x.status}">${ROT[x.status]}</span></td></tr>`).join('')}</tbody>
+    </table></div>
+  </div>`;
+}
+function modalPaciente(){
+  abrirModal(`<div class="mhead"><h3>Cadastrar paciente</h3><button class="x" onclick="fecharModal()">×</button></div>
+  <div class="mbody">
+    <div class="field"><label class="fl">Nome completo</label><input class="inp" id="pcNome" placeholder="Nome da paciente"></div>
+    <div class="grid g2" style="gap:12px">
+      <div class="field"><label class="fl">Nascimento</label><input class="inp" id="pcNasc" type="date"></div>
+      <div class="field"><label class="fl">Telefone</label><input class="inp" id="pcTel" placeholder="(15) 9....-...."></div>
+    </div>
+    <div class="grid g2" style="gap:12px">
+      <div class="field"><label class="fl">Microárea</label>
+        <select class="inp" id="pcMicro"><option>Microárea 1</option><option>Microárea 2</option><option>Microárea 3</option></select></div>
+      <div class="field"><label class="fl">Agente responsável</label>
+        <select class="inp" id="pcAcs"><option>Cleide Moraes</option><option>Rita Nunes</option><option>Vera Pinto</option></select></div>
+    </div>
+    <div class="field" style="margin-bottom:0"><label class="fl">Última mamografia (se houver)</label><input class="inp" id="pcUlt" type="date"></div>
+  </div>
+  <div class="mfoot"><button class="btn ghost" onclick="fecharModal()">Cancelar</button>
+    <button class="btn" onclick="salvarPaciente()">Salvar paciente</button></div>`);
+}
+function salvarPaciente(){
+  const nome=document.getElementById('pcNome').value.trim();
+  const nasc=document.getElementById('pcNasc').value;
+  if(!nome||!nasc){ toast('Informe nome e data de nascimento.'); return; }
+  pacientes.push(p(nome,nasc,document.getElementById('pcMicro').value,document.getElementById('pcAcs').value,
+                   document.getElementById('pcTel').value||'—',document.getElementById('pcUlt').value||null,[]));
+  log('Cadastro de paciente',nome);
+  fecharModal(); toast('Paciente cadastrada.'); ir('pacientes');
+}
+function modalImport(){
+  abrirModal(`<div class="mhead"><h3>Importar planilha</h3><button class="x" onclick="fecharModal()">×</button></div>
+  <div class="mbody">
+    <div class="note" style="margin-bottom:14px">Cole as linhas da planilha que a equipe usa hoje. Uma paciente por linha, separada por ponto e vírgula.</div>
+    <label class="fl">nome;nascimento;telefone;microárea;agente;última mamografia</label>
+    <textarea class="inp" id="impTxt">Marta Siqueira;1960-05-12;(15) 99444-1122;Microárea 2;Rita Nunes;2023-02-10
+Olga Ferraz;1954-09-01;(15) 99333-8877;Microárea 1;Cleide Moraes;</textarea>
+  </div>
+  <div class="mfoot"><button class="btn ghost" onclick="fecharModal()">Cancelar</button>
+    <button class="btn" onclick="importar()">Importar</button></div>`);
+}
+function importar(){
+  const linhas=document.getElementById('impTxt').value.split('\n').filter(l=>l.trim());
+  let n=0;
+  linhas.forEach(l=>{ const c=l.split(';'); if(c.length<5) return;
+    pacientes.push(p(c[0].trim(),c[1].trim(),c[3].trim(),c[4].trim(),c[2].trim(),c[5]&&c[5].trim()?c[5].trim():null,[])); n++; });
+  log('Importação de planilha',n+' paciente(s) importada(s)');
+  fecharModal(); toast(n+' paciente(s) importada(s).'); ir('pacientes');
+}
+
+/* =========================================================
+   METAS E RELATÓRIOS  (funcionalidade 7)
+   ========================================================= */
+function vMetas(){
+  const c=contagem();
+  const micros=[...new Set(pacientes.map(x=>x.micro))].sort();
+  const porMicro = micros.map(m=>{
+    const e = elegiveis().filter(x=>x.micro===m);
+    const ok = e.filter(x=>x.status!=='pendente').length;
+    return {m, tot:e.length, ok, pct: e.length? Math.round(ok/e.length*100):0};
+  });
+  const hist=[{m:'mar',v:38},{m:'abr',v:41},{m:'mai',v:44},{m:'jun',v:49},{m:'jul',v:52},{m:'ago',v:c.cobertura}];
+  return `
+  <h1 class="pg">Metas e relatórios</h1>
+  <p class="pgsub">Visão da coordenação. O número que importa na reunião não é o percentual, é quantas mulheres ainda faltam.</p>
+
+  <div class="stack">
+    <div class="card">
+      <h2 class="sec">Indicador: ${regra.nome}</h2>
+      <div class="grid g3">
+        <div class="stat"><div class="lab">Cobertura atual</div><div class="num">${c.cobertura}%</div><div class="fine">${c.emdia+c.avencer} de ${c.total} elegíveis</div></div>
+        <div class="stat"><div class="lab">Meta da competência</div><div class="num" style="color:var(--c400)">${regra.meta}%</div><div class="fine">equivale a ${c.alvo} mulheres</div></div>
+        <div class="stat"><div class="lab">Faltam</div><div class="num" style="color:var(--c700)">${c.faltam}</div><div class="fine">mamografias para bater a meta</div></div>
+      </div>
+      <div class="meter" style="margin-top:14px"><span style="width:${c.cobertura}%"></span><em style="left:${regra.meta}%"></em></div>
+    </div>
+
+    <div class="card">
+      <h2 class="sec">Cobertura por microárea</h2>
+      ${porMicro.map(x=>`<div class="bar">
+        <span class="bl">${x.m}</span>
+        <span class="bt"><span style="width:${x.pct}%"></span></span>
+        <span class="bv">${x.pct}%</span>
+        <span style="color:var(--muted);font-size:12px">${x.ok}/${x.tot}</span></div>`).join('')}
+      <div class="note" style="margin-top:12px">A microárea com menor cobertura é onde a coordenação deve concentrar o mutirão da próxima semana.</div>
+    </div>
+
+    <div class="card">
+      <h2 class="sec">Evolução da competência</h2>
+      <div style="display:flex;align-items:flex-end;gap:14px;height:130px;padding-top:8px">
+        ${hist.map(h=>`<div style="flex:1;text-align:center">
+          <div style="height:${h.v}px;background:${h.m==='ago'?'var(--c600)':'var(--c200)'};border-radius:2px 2px 0 0"></div>
+          <div class="mono" style="font-size:11px;margin-top:5px">${h.v}%</div>
+          <div class="mono" style="font-size:10px;color:var(--muted)">${h.m}</div></div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+/* =========================================================
+   REGRA DO INDICADOR  (funcionalidade 3 — parametrização)
+   ========================================================= */
+function vIndicador(){
+  return `
+  <h1 class="pg">Regra do indicador</h1>
+  <p class="pgsub">A regra fica em cadastro, não no código. Quando o Ministério da Saúde muda a faixa etária ou a periodicidade, a unidade ajusta aqui e o sistema reclassifica todo mundo.</p>
+
+  <div class="grid g2">
+    <div class="card">
+      <h2 class="sec">Parâmetros</h2>
+      <div class="field"><label class="fl">Nome do indicador</label><input class="inp" id="rgNome" value="${regra.nome}"></div>
+      <div class="grid g2" style="gap:12px">
+        <div class="field"><label class="fl">Idade mínima</label><input class="inp" id="rgMin" type="number" value="${regra.idadeMin}"></div>
+        <div class="field"><label class="fl">Idade máxima</label><input class="inp" id="rgMax" type="number" value="${regra.idadeMax}"></div>
+      </div>
+      <div class="grid g2" style="gap:12px">
+        <div class="field"><label class="fl">Janela (meses)</label><input class="inp" id="rgJan" type="number" value="${regra.janelaMeses}"></div>
+        <div class="field"><label class="fl">Alerta antecipado (dias)</label><input class="inp" id="rgAle" type="number" value="${regra.alertaDias}"></div>
+      </div>
+      <div class="field"><label class="fl">Meta de cobertura (%)</label><input class="inp" id="rgMeta" type="number" value="${regra.meta}"></div>
+      <button class="btn" onclick="salvarRegra()">Salvar e reclassificar</button>
+    </div>
+
+    <div class="card">
+      <h2 class="sec">Como o sistema vai ler</h2>
+      <div class="rulepreview">
+        <b>SE</b> sexo = feminino<br>
+        <b>E</b> idade entre ${regra.idadeMin} e ${regra.idadeMax} anos<br>
+        <b>ENTÃO</b> a paciente é elegível.<br><br>
+        <b>SE</b> última mamografia &gt; ${regra.janelaMeses} meses ou inexistente<br>
+        <b>ENTÃO</b> situação = pendente.<br>
+        <b>SE</b> vence nos próximos ${regra.alertaDias} dias<br>
+        <b>ENTÃO</b> situação = a vencer.
+      </div>
+      <div class="note" style="margin-top:14px">
+        <b>Por que isso é parametrizável:</b> em 2025 a recomendação do rastreamento no SUS passou a alcançar mulheres de 50 a 74 anos, e a faixa de 40 a 49 ganhou acesso sem periodicidade fixa. Uma regra fixa no código teria quebrado. Confirmem com a coordenação qual regra a unidade é cobrada hoje.
+      </div>
+      <div class="note" style="margin-top:10px">
+        <b>Expansão futura:</b> a mesma estrutura recebe citopatológico, pré-natal e outros indicadores sem reprogramar o sistema. O escopo do PI segue só o câncer de mama.
+      </div>
+    </div>
+  </div>`;
+}
+function salvarRegra(){
+  regra.nome=document.getElementById('rgNome').value;
+  regra.idadeMin=+document.getElementById('rgMin').value;
+  regra.idadeMax=+document.getElementById('rgMax').value;
+  regra.janelaMeses=+document.getElementById('rgJan').value;
+  regra.alertaDias=+document.getElementById('rgAle').value;
+  regra.meta=+document.getElementById('rgMeta').value;
+  log('Alteração de regra',`${regra.idadeMin}-${regra.idadeMax} anos, janela ${regra.janelaMeses} meses`);
+  toast(pacientes.length+' pacientes reavaliadas com a nova regra.');
+  ir('indicador');
+}
+
+/* =========================================================
+   USUÁRIOS E AUDITORIA  (funcionalidade 9)
+   ========================================================= */
+function vUsuarios(){
+  return `
+  <h1 class="pg">Usuários e auditoria</h1>
+  <p class="pgsub">O sistema guarda dado sensível de saúde. Controlar quem acessa e registrar quem alterou o quê é exigência da LGPD, não recurso extra.</p>
+
+  <div class="stack">
+    <div class="card">
+      <h2 class="sec">Usuários da unidade</h2>
+      <div class="tblscroll"><table>
+        <thead><tr><th>Nome</th><th>E-mail</th><th>Perfil</th><th>Situação</th><th></th></tr></thead>
+        <tbody>${usuarios.map((u,i)=>`<tr>
+          <td class="nm">${u.nome}</td><td class="mono" style="font-size:12px">${u.email}</td><td>${u.perfil}</td>
+          <td><span class="tag ${u.ativo?'emdia':'naoelegivel'}">${u.ativo?'Ativo':'Inativo'}</span></td>
+          <td><button class="linkbtn" onclick="alternarUsuario(${i})">${u.ativo?'Inativar':'Reativar'}</button></td>
+        </tr>`).join('')}</tbody>
+      </table></div>
+      <div class="note" style="margin-top:14px">
+        <b>Coordenação</b> vê relatórios e metas &middot; <b>Equipe de saúde</b> cadastra pacientes e registra contatos &middot;
+        <b>Agente comunitária</b> vê só a própria microárea &middot; <b>Administrador</b> gerencia usuários e regras.
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="sec">Trilha de auditoria</h2>
+      ${auditoria.length? `<div class="tblscroll"><table>
+        <thead><tr><th>Quando</th><th>Quem</th><th>Ação</th><th>Detalhe</th></tr></thead>
+        <tbody>${auditoria.slice(0,14).map(a=>`<tr>
+          <td class="mono" style="font-size:12px">${a.quando}</td><td>${a.quem}</td>
+          <td class="nm">${a.acao}</td><td style="color:var(--muted)">${a.detalhe}</td></tr>`).join('')}</tbody>
+      </table></div>` : `<div class="empty"><b>Nenhum registro ainda.</b>Navegue pelo sistema e volte aqui: cada ação fica gravada.</div>`}
+    </div>
+  </div>`;
+}
+function alternarUsuario(i){
+  usuarios[i].ativo=!usuarios[i].ativo;
+  log('Alteração de usuário',usuarios[i].nome+' — '+(usuarios[i].ativo?'reativado':'inativado'));
+  ir('usuarios');
+}
+</script>
+</body>
+</html>
