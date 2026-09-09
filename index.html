@@ -47,6 +47,14 @@ label.fl{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.
 .btn.ghost:hover{background:var(--c050);border-color:var(--c300)}
 .btn.wide{width:100%;padding:11px}
 .lgnote{margin-top:16px;font-size:11.5px;color:var(--c300);text-align:center;font-family:var(--mono)}
+.simsep{margin:20px 0 10px;font-family:var(--mono);font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);text-align:center;position:relative}
+.simsep::before,.simsep::after{content:"";position:absolute;top:50%;width:24%;height:1px;background:var(--line)}
+.simsep::before{left:0}.simsep::after{right:0}
+.simgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.sim{background:var(--c050);border:1px solid var(--line);border-radius:3px;padding:8px 6px;font-size:12.5px;cursor:pointer;color:var(--c800)}
+.sim:hover{background:var(--c100);border-color:var(--c300)}
+.sim.on{background:var(--c600);border-color:var(--c600);color:#fff;font-weight:600}
+.sim:last-child{grid-column:1/-1}
 
 /* ---------- SHELL ---------- */
 #app{display:none}
@@ -196,19 +204,23 @@ textarea.inp{min-height:112px;font-family:var(--mono);font-size:12px;resize:vert
       <h1 class="lgtitle">Entrar</h1>
       <p class="lgdesc">Sistema de Gestão de Indicadores de Saúde da Atenção Primária.</p>
       <div class="field">
-        <label class="fl" for="lguser">Usuário</label>
-        <select class="inp" id="lguser">
-          <option value="coord">Marina Alves — Coordenação</option>
-          <option value="equipe">Joana Ribeiro — Enfermagem</option>
-          <option value="acs">Cleide Moraes — Agente comunitária</option>
-          <option value="admin">Suporte TI — Administrador</option>
-        </select>
+        <label class="fl" for="lgmail">E-mail institucional</label>
+        <input class="inp" id="lgmail" value="marina@usf.itapetininga.sp">
       </div>
       <div class="field">
         <label class="fl" for="lgpwd">Senha</label>
         <input class="inp" id="lgpwd" type="password" value="123456">
       </div>
       <button class="btn wide" onclick="entrar()">Entrar</button>
+
+      <div class="simsep">Simular acesso como</div>
+      <div class="simgrid">
+        <button class="sim on" data-perfil="coord" onclick="escolher('coord')">Coordenação</button>
+        <button class="sim" data-perfil="equipe" onclick="escolher('equipe')">Equipe de saúde</button>
+        <button class="sim" data-perfil="acs" onclick="escolher('acs')">Agente comunitária</button>
+        <button class="sim" data-perfil="ti" onclick="escolher('ti')">TI / Suporte local</button>
+        <button class="sim" data-perfil="admin" onclick="escolher('admin')">Administrador</button>
+      </div>
     </div>
     <p class="lgnote">Protótipo — dados fictícios</p>
   </div>
@@ -243,6 +255,7 @@ textarea.inp{min-height:112px;font-family:var(--mono);font-size:12px;resize:vert
           <option value="coord">Coordenação</option>
           <option value="equipe">Equipe de saúde</option>
           <option value="acs">Agente comunitária</option>
+          <option value="ti">TI / Suporte local</option>
           <option value="admin">Administrador</option>
         </select>
         <div class="av" id="avatar">MA</div>
@@ -320,15 +333,32 @@ let usuarios = [
   {nome:'Cleide Moraes',perfil:'Agente comunitária',email:'cleide@usf.itapetininga.sp',ativo:true},
   {nome:'Rita Nunes',perfil:'Agente comunitária',email:'rita@usf.itapetininga.sp',ativo:true},
   {nome:'Vera Pinto',perfil:'Agente comunitária',email:'vera@usf.itapetininga.sp',ativo:false},
-  {nome:'Suporte TI',perfil:'Administrador',email:'ti@potencial.local',ativo:true}
+  {nome:'Diego Ramos',perfil:'TI / Suporte local',email:'diego.ti@itapetininga.sp',ativo:true},
+  {nome:'Regina Sato',perfil:'Administrador',email:'regina.admin@itapetininga.sp',ativo:true}
 ];
 
 const USERS = {
   coord:{nome:'Marina Alves',perfil:'coord',rot:'Coordenação',ini:'MA'},
   equipe:{nome:'Joana Ribeiro',perfil:'equipe',rot:'Equipe de saúde',ini:'JR'},
   acs:{nome:'Cleide Moraes',perfil:'acs',rot:'Agente comunitária',ini:'CM'},
-  admin:{nome:'Suporte TI',perfil:'admin',rot:'Administrador',ini:'TI'}
+  ti:{nome:'Diego Ramos',perfil:'ti',rot:'TI / Suporte local',ini:'DR'},
+  admin:{nome:'Regina Sato',perfil:'admin',rot:'Administrador',ini:'RS'}
 };
+// Telas liberadas por perfil (funcionalidade 9 — controle de acesso)
+const PERM = {
+  coord: ['painel','pendencias','pacientes','metas','ficha'],
+  equipe:['painel','pendencias','pacientes','ficha'],
+  acs:   ['painel','pendencias','pacientes','ficha'],
+  ti:    ['painel','indicador','usuarios'],
+  admin: ['painel','metas','indicador','usuarios']
+};
+let escolhido = 'coord';
+function escolher(k){
+  escolhido = k;
+  document.querySelectorAll('.sim').forEach(b=>b.classList.toggle('on', b.dataset.perfil===k));
+  document.getElementById('lgmail').value =
+    (usuarios.find(u=>u.perfil===USERS[k].rot)||{email:'usuario@usf.itapetininga.sp'}).email;
+}
 let atual = USERS.coord;
 let tela = 'painel';
 let fichaId = null;
@@ -379,7 +409,7 @@ function log(acao,detalhe){
    NAVEGAÇÃO
    ========================================================= */
 function entrar(){
-  const k = document.getElementById('lguser').value;
+  const k = escolhido;
   atual = USERS[k];
   document.getElementById('perfilSel').value = k;
   document.getElementById('login').style.display='none';
@@ -394,13 +424,18 @@ function sair(){
 function trocarPerfil(){
   atual = USERS[document.getElementById('perfilSel').value];
   log('Troca de perfil','Perfil ativo: '+atual.rot);
-  ir(tela==='indicador'||tela==='usuarios' ? 'painel' : tela);
+  ir(PERM[atual.perfil].includes(tela) ? tela : PERM[atual.perfil][0]);
 }
 function ir(t,id){
   tela=t; if(id) fichaId=id;
-  document.querySelectorAll('.nav').forEach(b=>b.classList.toggle('on', b.dataset.go===t));
-  const adm = atual.perfil==='admin' || atual.perfil==='coord';
-  document.querySelectorAll('[data-admin]').forEach(e=>e.style.display = adm?'':'none');
+  const pode = PERM[atual.perfil];
+  document.querySelectorAll('.nav').forEach(b=>{
+    b.classList.toggle('on', b.dataset.go===t);
+    b.style.display = pode.includes(b.dataset.go) ? '' : 'none';
+  });
+  document.querySelectorAll('.rsec')[0].style.display = pode.includes('pendencias')?'':'none';
+  document.querySelectorAll('[data-admin]').forEach(e=>
+    e.style.display = (pode.includes('indicador')||pode.includes('usuarios'))?'':'none');
   document.getElementById('avatar').textContent = atual.ini;
   document.getElementById('navBadge').textContent = contagem().pendente;
   const nomes={painel:'Painel',pendencias:'Pendências',pacientes:'Pacientes',metas:'Metas e relatórios',
@@ -423,6 +458,25 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape') fecharModal(); });
    ========================================================= */
 function vPainel(){
   const c = contagem();
+  // TI e Administrador não acessam dado identificado de paciente (minimização — LGPD)
+  if(!PERM[atual.perfil].includes('ficha')) return `
+  <h1 class="pg">Bom dia, ${atual.nome.split(' ')[0]}.</h1>
+  <p class="pgsub">Perfil ${atual.rot}. Este acesso é técnico: configura o sistema, mas não exibe dado identificado de paciente.</p>
+  <div class="stack">
+    <div class="grid g3">
+      <div class="card stat"><div class="lab">Pacientes na base</div><div class="num">${pacientes.length}</div><div class="fine">${c.total} elegíveis pela regra atual</div></div>
+      <div class="card stat"><div class="lab">Indicador ativo</div><div class="num" style="font-size:22px;letter-spacing:-.01em">${regra.nome}</div><div class="fine">${regra.idadeMin}–${regra.idadeMax} anos &middot; janela ${regra.janelaMeses} meses</div></div>
+      <div class="card stat"><div class="lab">Usuários ativos</div><div class="num">${usuarios.filter(u=>u.ativo).length}</div><div class="fine">de ${usuarios.length} cadastrados</div></div>
+    </div>
+    <div class="card">
+      <h2 class="sec">Últimas ações registradas</h2>
+      ${auditoria.length? `<div class="tblscroll"><table>
+        <thead><tr><th>Quando</th><th>Quem</th><th>Ação</th></tr></thead>
+        <tbody>${auditoria.slice(0,5).map(a=>`<tr><td class="mono" style="font-size:12px">${a.quando}</td><td>${a.quem}</td><td class="nm">${a.acao}</td></tr>`).join('')}</tbody>
+      </table></div>`:'<div class="empty"><b>Sem registros ainda.</b></div>'}
+      <button class="btn ghost" style="margin-top:14px" onclick="ir('indicador')">Configurar regra do indicador</button>
+    </div>
+  </div>`;
   const lista = elegiveis().sort((a,b)=>b.atraso-a.atraso);
   const dots = lista.map(x=>`<button class="pdot ${x.status}" title="${x.nome} — ${ROT[x.status]}" onclick="ir('ficha',${x.id})"></button>`).join('');
   const urgentes = lista.filter(x=>x.status==='pendente').slice(0,5);
