@@ -4,7 +4,9 @@ Protótipo navegável desenvolvido para a disciplina **Projeto Integrador I** �
 
 Versão final. Nesta etapa o acesso é restrito à **coordenação da unidade**.
 
-**Acesse o protótipo:** https://rodrigomcaetano.github.io/SIGAP/
+**Acesse o protótipo final:** https://rodrigomcaetano.github.io/SIGAP/final/
+
+**Protótipo inicial (para comparação):** https://rodrigomcaetano.github.io/SIGAP/
 
 ## Integrantes
 
